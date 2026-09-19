@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Cab Fare Calculator | Sai Express Tours & Travels</title>
+    
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Maps API (Optional: Replace YOUR_API_KEY with your key if needed) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places" async defer onerror="handleMapsError()"></script>
+    
+    <style>
+        :root {
+            --primary: #ff5e14;
+            --primary-dark: #e04d0b;
+            --accent: #0f172a;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --whatsapp: #25d366;
+            --radius: 16px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #0b0f19;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-area h1 { font-size: 18px; font-weight: 800; color: var(--primary); }
+        .logo-area span { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .icon-btn {
+            background: var(--bg-main); border: 1px solid var(--border);
+            width: 38px; height: 38px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-main); cursor: pointer;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        @media(max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+        .card-title i { color: var(--primary); }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media(max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+        
+        .input-box { position: relative; display: flex; align-items: center; }
+        .input-box i { position: absolute; left: 14px; color: var(--primary); z-index: 2; }
+        .input-box input, .input-box select {
+            width: 100%; padding: 12px 14px 12px 42px;
+            border: 1px solid var(--border); border-radius: 10px;
+            background: var(--bg-main); color: var(--text-main); font-size: 14px; outline: none;
+        }
+        .input-box input:focus, .input-box select:focus { border-color: var(--primary); }
+
+        .checkbox-group {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--bg-main); padding: 12px 15px;
+            border-radius: 10px; border: 1px solid var(--border);
+            cursor: pointer; margin-bottom: 10px; font-size: 14px; font-weight: 600;
+        }
+        .checkbox-group input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 14px;
+            cursor: pointer; border: none; text-decoration: none; width: 100%;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-whatsapp { background: var(--whatsapp); color: #fff; margin-top: 10px; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* Quotation & Result Box */
+        .quotation-box {
+            background: var(--bg-main);
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .q-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted); margin-bottom: 8px; }
+        .q-row.total { font-size: 18px; font-weight: 800; color: var(--text-main); border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+        .q-row.total span:last-child { color: var(--primary); }
+
+        /* Owner Breakdown (Internal Only) */
+        .owner-box {
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        [data-theme="dark"] .owner-box { background: rgba(255, 255, 255, 0.03); }
+        .owner-title { font-weight: 700; color: var(--primary); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+        .saved-card {
+            background: var(--bg-main); border: 1px solid var(--border);
+            padding: 15px; border-radius: 10px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <header>
+        <div class="logo-area">
+            <h1>SAI EXPRESS</h1>
+            <span>Smart Cab Fare Calculator</span>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme"><i class="fas fa-moon" id="themeIcon"></i></button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-grid">
+            
+            <!-- LEFT PANEL: Inputs & Parameters -->
+            <div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-route"></i> Trip & Route Details</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Pickup Location</label>
+                            <div class="input-box"><i class="fas fa-map-marker-alt" style="color:var(--success);"></i><input type="text" id="pickupLoc" placeholder="e.g. Airoli, Navi Mumbai" value="Navi Mumbai"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Drop Location</label>
+                            <div class="input-box"><i class="fas fa-map-marker-alt" style="color:var(--primary);"></i><input type="text" id="dropLoc" placeholder="e.g. Nashik" value="Nashik"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Distance Source</label>
+                            <div class="input-box">
+                                <i class="fas fa-globe"></i>
+                                <select id="distMode" onchange="toggleDistInput()">
+                                    <option value="manual">Manual KM Entry</option>
+                                    <option value="maps">Google Maps API (Auto)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id="manualDistGroup">
+                            <label>Total Distance (KM)</label>
+                            <div class="input-box"><i class="fas fa-road"></i><input type="number" id="manualKm" value="155" oninput="calculateFare()"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Trip Type</label>
+                            <div class="input-box">
+                                <i class="fas fa-exchange-alt"></i>
+                                <select id="tripType" onchange="calculateFare()">
+                                    <option value="One Way">One Way Trip</option>
+                                    <option value="Round Trip">Round Trip (Return)</option>
+                                    <option value="Local 8H">Local Rental (8 Hours / 80 KM)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Vehicle Fuel Type</label>
+                            <div class="input-box">
+                                <i class="fas fa-gas-pump"></i>
+                                <select id="fuelType" onchange="calculateFare()">
+                                    <option value="CNG">Swift Dzire CNG</option>
+                                    <option value="Petrol">Swift Dzire Petrol</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Trip Date</label>
+                            <div class="input-box"><i class="fas fa-calendar-alt"></i><input type="date" id="tripDate"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Number of Days</label>
+                            <div class="input-box"><i class="fas fa-clock"></i><input type="number" id="tripDays" value="1" min="1" oninput="calculateFare()"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Passengers</label>
+                            <div class="input-box">
+                                <i class="fas fa-users"></i>
+                                <select id="passengers">
+                                    <option value="1">1 Passenger</option>
+                                    <option value="2">2 Passengers</option>
+                                    <option value="3">3 Passengers</option>
+                                    <option value="4" selected>4 Passengers</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Business Profit Margin (%)</label>
+                            <div class="input-box"><i class="fas fa-chart-line"></i><input type="number" id="profitMargin" value="22" min="10" max="50" oninput="calculateFare()"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-sliders-h"></i> Extra Charges & Options</div>
+                    
+                    <div class="form-row">
+                        <div class="checkbox-group" onclick="toggleCheckbox('driverReturn')">
+                            <input type="checkbox" id="driverReturn" onchange="calculateFare()">
+                            <span>Driver/Car Return Extra KM charge</span>
+                        </div>
+                        <div class="checkbox-group" onclick="toggleCheckbox('nightCharge')">
+                            <input type="checkbox" id="nightCharge" onchange="calculateFare()">
+                            <span>Night Driving Charge (10 PM - 6 AM)</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Estimated Toll (â¹)</label>
+                            <div class="input-box"><i class="fas fa-road"></i><input type="number" id="tollCost" value="300" oninput="calculateFare()"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Parking & Permit (â¹)</label>
+                            <div class="input-box"><i class="fas fa-parking"></i><input type="number" id="parkingCost" value="150" oninput="calculateFare()"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Driver Allowance Per Day (â¹)</label>
+                            <div class="input-box"><i class="fas fa-user-tie"></i><input type="number" id="driverAllowance" value="300" oninput="calculateFare()"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Quotation & Owner Analytics -->
+            <div>
+                <div class="card" style="border: 2px solid var(--primary);">
+                    <div class="card-title" style="border:none; margin-bottom:10px;"><i class="fas fa-file-invoice-dollar"></i> Customer Quotation</div>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Yeh quotation aap customer ko WhatsApp ya share kar sakte hain.</p>
+                    
+                    <div class="quotation-box">
+                        <div class="q-header">
+                            <div><strong>Sai Express Tours & Travels</strong><br><span style="font-size:11px; color:var(--text-muted);">Swift Dzire AC Cab</span></div>
+                            <div style="text-align: right;"><span id="qDate" style="font-size: 12px; color: var(--text-muted);">--/--/----</span></div>
+                        </div>
+                        <div class="q-row"><span>Route:</span> <strong id="qRoute">Navi Mumbai â Nashik</strong></div>
+                        <div class="q-row"><span>Trip Type:</span> <span id="qTripType">One Way</span></div>
+                        <div class="q-row"><span>Distance & Vehicle:</span> <span id="qDistInfo">155 KM (CNG)</span></div>
+                        <div class="q-row"><span>Toll, Parking & Driver:</span> <span>Included</span></div>
+                        <div class="q-row total"><span>Recommended Fare:</span> <span id="qFinalTotal">â¹0</span></div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveQuotation()"><i class="fas fa-bookmark"></i> Save Quotation</button>
+                    <button class="btn btn-whatsapp" onclick="sendWhatsAppQuotation()"><i class="fab fa-whatsapp"></i> Send Quotation on WhatsApp</button>
+                </div>
+
+                <!-- OWNER INTERNAL BREAKDOWN (Hidden from Customer) -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-lock" style="color:var(--success);"></i> Owner Cost & Profit Analytics</div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">*Yeh section sirf aapke (Owner) ke liye hai. Customer ko yeh nahi dikhega.</p>
+                    
+                    <div class="owner-box">
+                        <div class="owner-title"><span>Actual Operational Cost:</span> <span id="ownerTotalCost">â¹0</span></div>
+                        <div class="q-row"><span>Fuel Expense:</span> <span id="internalFuel">â¹0</span></div>
+                        <div class="q-row"><span>Toll & Parking:</span> <span id="internalTollPark">â¹0</span></div>
+                        <div class="q-row"><span>Driver Batta:</span> <span id="internalDriver">â¹0</span></div>
+                        <div class="q-row"><span>Car Maintenance & Wear:</span> <span id="internalMaint">â¹0</span></div>
+                        <hr style="border:0; border-top:1px solid var(--border); margin: 8px 0;">
+                        <div class="owner-title" style="color:var(--success);"><span>Estimated Business Profit:</span> <span id="ownerProfitAmount">â¹0</span></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-history"></i> Saved Quotations</div>
+                    <div id="savedListContainer" style="max-height: 250px; overflow-y: auto;">
+                        <p style="font-size: 13px; color: var(--text-muted); text-align: center;">No saved quotations yet.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Set today's date on load
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tripDate').value = today;
+            calculateFare();
+            loadSavedQuotations();
+        };
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            if(body.getAttribute('data-theme') === 'light') {
+                body.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+            } else {
+                body.setAttribute('body', 'light');
+                body.setAttribute('data-theme', 'light');
+                icon.className = 'fas fa-moon';
+            }
+        }
+
+        function toggleCheckbox(id) {
+            const cb = document.getElementById(id);
+            cb.checked = !cb.checked;
+            calculateFare();
+        }
+
+        function toggleDistInput() {
+            const mode = document.getElementById('distMode').value;
+            const manualGroup = document.getElementById('manualDistGroup');
+            if(mode === 'maps') {
+                manualGroup.style.opacity = '0.5';
+                alert("Google Maps API mode selected. Ensure API key is configured or fallback manual distance will be used.");
+            } else {
+                manualGroup.style.opacity = '1';
+            }
+            calculateFare();
+        }
+
+        function calculateFare() {
+            let km = parseFloat(document.getElementById('manualKm').value) || 100;
+            const tripType = document.getElementById('tripType').value;
+            const fuelType = document.getElementById('fuelType').value;
+            const days = parseInt(document.getElementById('tripDays').value) || 1;
+            const profitMargin = parseFloat(document.getElementById('profitMargin').value) || 20;
+            
+            const toll = parseFloat(document.getElementById('tollCost').value) || 0;
+            const parking = parseFloat(document.getElementById('parkingCost').value) || 0;
+            const allowancePerDay = parseFloat(document.getElementById('driverAllowance').value) || 300;
+            
+            const driverReturn = document.getElementById('driverReturn').checked;
+            const nightCharge = document.getElementById('nightCharge').checked;
+
+            // Adjust KM based on Trip Type
+            let effectiveKm = km;
+            if(tripType === 'Round Trip') {
+                effectiveKm = km * 2;
+            } else if(tripType.includes('Local')) {
+                effectiveKm = 80; // Standard 8H local KM
+            }
+
+            // Driver return extra KM logic (if one way and car needs to return empty)
+            if(tripType === 'One Way' && driverReturn) {
+                effectiveKm += km * 0.5; // Adding 50% return empty distance wear
+            }
+
+            // Fuel Cost calculation (CNG approx â¹3.5/km, Petrol approx â¹7.5/km for Swift Dzire)
+            let fuelCostPerKm = (fuelType === 'CNG') ? 3.8 : 7.5;
+            let totalFuelCost = effectiveKm * fuelCostPerKm;
+
+            // Maintenance / Wear & Tear cost per km (~â¹1.5)
+            let maintenanceCost = effectiveKm * 1.5;
+
+            // Allowances & Extras
+            let totalAllowance = allowancePerDay * days;
+            let totalTollPark = toll + parking;
+            let nightFee = nightCharge ? 300 : 0;
+
+            // Total Actual Operational Cost for Owner
+            let totalActualCost = totalFuelCost + maintenanceCost + totalAllowance + totalTollPark + nightFee;
+
+            // Profit calculation
+            let profitAmount = totalActualCost * (profitMargin / 100);
+            let recommendedFare = totalActualCost + profitAmount;
+
+            // Round to nearest 50
+            recommendedFare = Math.round(recommendedFare / 50) * 50;
+
+            // Update Customer Quotation Display
+            document.getElementById('qDate').innerText = document.getElementById('tripDate').value;
+            document.getElementById('qRoute').innerText = `${document.getElementById('pickupLoc').value} â ${document.getElementById('dropLoc').value}`;
+            document.getElementById('qTripType').innerText = tripType;
+            document.getElementById('qDistInfo').innerText = `${Math.round(effectiveKm)} KM (${fuelType})`;
+            document.getElementById('qFinalTotal').innerText = `â¹${recommendedFare}`;
+
+            // Update Owner Internal Analytics Display
+            document.getElementById('ownerTotalCost').innerText = `â¹${Math.round(totalActualCost)}`;
+            document.getElementById('internalFuel').innerText = `â¹${Math.round(totalFuelCost)}`;
+            document.getElementById('internalTollPark').innerText = `â¹${Math.round(totalTollPark)}`;
+            document.getElementById('internalDriver').innerText = `â¹${Math.round(totalAllowance)}`;
+            document.getElementById('internalMaint').innerText = `â¹${Math.round(maintenanceCost)}`;
+            document.getElementById('ownerProfitAmount').innerText = `â¹${Math.round(profitAmount)} (${profitMargin}%)`;
+        }
+
+        function saveQuotation() {
+            let quotes = JSON.parse(localStorage.getItem('sai_quotations') || '[]');
+            quotes.push({
+                route: `${document.getElementById('pickupLoc').value} to ${document.getElementById('dropLoc').value}`,
+                tripType: document.getElementById('tripType').value,
+                date: document.getElementById('tripDate').value,
+                fare: document.getElementById('qFinalTotal').innerText,
+                dist: document.getElementById('qDistInfo').innerText
+            });
+            localStorage.setItem('sai_quotations', JSON.stringify(quotes));
+            alert('Quotation saved successfully!');
+            loadSavedQuotations();
+        }
+
+        function loadSavedQuotations() {
+            const container = document.getElementById('savedListContainer');
+            let quotes = JSON.parse(localStorage.getItem('sai_quotations') || '[]');
+            if(quotes.length === 0) {
+                container.innerHTML = `<p style="font-size: 13px; color: var(--text-muted); text-align: center;">No saved quotations yet.</p>`;
+                return;
+            }
+            container.innerHTML = '';
+            quotes.forEach((q, idx) => {
+                container.innerHTML += `
+                    <div class="saved-card">
+                        <div>
+                            <strong style="font-size:14px;">${q.route}</strong><br>
+                            <span style="font-size:12px; color:var(--text-muted);">${q.tripType} | ${q.date}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="font-size:15px; font-weight:800; color:var(--primary);">${q.fare}</span><br>
+                            <button onclick="deleteQuote(${idx})" style="background:none; border:none; color:red; font-size:11px; cursor:pointer;"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteQuote(idx) {
+            let quotes = JSON.parse(localStorage.getItem('sai_quotations') || '[]');
+            quotes.splice(idx, 1);
+            localStorage.setItem('sai_quotations', JSON.stringify(quotes));
+            loadSavedQuotations();
+        }
+
+        function sendWhatsAppQuotation() {
+            const route = `${document.getElementById('pickupLoc').value} to ${document.getElementById('dropLoc').value}`;
+            const tripType = document.getElementById('tripType').value;
+            const date = document.getElementById('tripDate').value;
+            const dist = document.getElementById('qDistInfo').innerText;
+            const total = document.getElementById('qFinalTotal').innerText;
+
+            const msg = `Hello! Here is your cab quotation from *Sai Express Tours & Travels* (Swift Dzire AC):\n\nð Route: ${route}\nð Trip Type: ${tripType}\nð Date: ${date}\nð£ï¸ Distance: ${dist}\nð° *Total Fare: ${total}*\n\n(Includes Toll, Parking & Driver Allowance). Please confirm if you would like to book!`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+    </script>
+</body>
+</html>
